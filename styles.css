@@ -1,0 +1,77 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --background-color: black;
+}
+
+html {
+  background-color: blue;
+}
+
+body {
+  background-color: var(--background-color);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Hide scrollbar */
+#cards-container {
+  scrollbar-width: none; /* Firefox and latest Chromium */
+}
+#cards-container::-webkit-scrollbar {
+  display: none; /* Safari and legacy Chromium */
+}
+
+#carousel {
+  /* Carousel window */
+  width: 600px;
+  height: 600px;
+
+  /* ! DEBUGGING STYLE 
+  background-color: white;
+  border: 2px solid blue;*/
+}
+
+#cards-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  column-gap: 20px;
+  scroll-behavior: smooth;
+  /* Important for swiping */
+  overflow: auto;
+  /*scroll-snap-type: x mandatory;*/
+
+  /* ! DEBUGGING STYLE
+  background-color: black;
+  border: 2px solid black;*/
+}
+
+.card {
+  width: 600px;
+  height: 600px;
+  flex: 0 0 auto;
+  font-size: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: translate 300ms ease-out; /* cubic-bezier(0.34, 1.2, 0.64, 1) */
+  /* Important for swiping */
+  /*scroll-snap-align: center;*/
+
+  /* ! BUG: jagged edges during horizontal translation */
+  will-change: translate;
+
+  /* ! DEBUGGING STYLE 
+  background-color: rgba(255, 0, 0, 0.411); */
+  /*border: 2px solid black;*/
+}
