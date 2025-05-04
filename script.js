@@ -39,6 +39,10 @@ cardsContainer.append(leftClone);
 const rightClone = cards[cardsCount - 1].cloneNode(true);
 cardsContainer.prepend(rightClone);
 
+if (cardsCount % 2 == 0) {
+  // Enforce odd number of cards in the carousel - centered card
+}
+
 cardsCount = cardsContainer.children.length;
 
 disableTransitions();
@@ -80,7 +84,7 @@ function updateTranslateX(deltaY) {
 // Function to perform regular translation with preset transition effect
 function translate() {
   [...cardsContainer.children].forEach((card, i) => {
-    const z = getTranslateZ(i);
+    const z = getTranslateZQuadratic(i);
     card.style.transform = `translate3D(${translateX}px, 0px, ${z}px)`;
   });
   setZIndex();
@@ -164,32 +168,29 @@ function enableTranslationAndTransition() {
   }, 100);
 }
 
-// ! BUG: cards crossing through each other at the center of the carousel
-// ! Fix: calculate z-index based on the card's position along the carousel's length -
-// ! instead of DOM indexing
-// ! as reorganizing the DOM happens after the cards have actually crossed in the center.
 function getCarouselCenter() {
   return (cardWidth * cardsCount + gap * (cardsCount - 1)) / 2;
 }
 
 // Function to get the distance from the card's center to the carousel's center
-function getCardCenterToCarouselCenter(i) {
+function getCardCenterFromCarouselCenter(i) {
   const carouselCenter = getCarouselCenter();
   // Card's center to the carousel's left
   const cardCenter = i * (cardWidth + gap) + cardWidth / 2;
   return Math.abs(cardCenter + translateX - carouselCenter);
 }
 
-// Function to ge the card's normalized distance to the center on the x-axis
+// Function to ge the card's normalized distance (0-1) from the center on the x-axis
 function normalizeX(i) {
   return (
-    getCardCenterToCarouselCenter(i) / (getCarouselCenter() - cardWidth * 0.5)
+    getCardCenterFromCarouselCenter(i) / (getCarouselCenter() - cardWidth * 0.5)
   );
 }
 
-// ! BUG: when the carousel has even cardsCount
-// ! the right side z-index looks reversed
-// ! and the central 2 cards are displaced in the z-axis when they shouldn't be.
+// ! BUG: there is a jump in the z-index of the right central card
+// ! (immediate shift from back to front of the left central card)
+// ! when the carousel has low cardsCount and is moving from right to left and narrow to no gap
+// ! at moment the moment the DOM is reorganized
 function getZIndex(i) {
   const maxZIndex = cardsCount;
   return Math.ceil(maxZIndex - maxZIndex * normalizeX(i));
@@ -198,12 +199,28 @@ function getZIndex(i) {
 function setZIndex() {
   [...cardsContainer.children].forEach((card, i) => {
     card.style.zIndex = `${getZIndex(i)}`;
-    console.log(getZIndex(i));
+    // console.log(getZIndex(i));
   });
 }
 
-function getTranslateZ(i) {
-  // Define max z translation - applied to ending cards
-  const maxTranslationZ = Math.floor((cardsCount - 1) / 2) * -300;
-  return maxTranslationZ * normalizeX(i);
+function getTranslateZCircular(i) {
+  // Get normalized distance x to center (0-1)
+  const x = normalizeX(i);
+
+  // Define radius of the circular arch
+  const radius = Math.floor((cardsCount - 1) / 2) * 80;
+
+  // Create a circular arch
+  return radius * (Math.cos(x * Math.PI) - 1);
+}
+
+function getTranslateZQuadratic(i) {
+  // Get normalized distance x to center (0-1)
+  const x = normalizeX(i);
+
+  // Define max z translation (deepest point of the arch)
+  const maxZ = Math.floor((cardsCount - 1) / 2) * -300;
+
+  // Create a quadratic arch effect
+  return maxZ * Math.pow(x, 2);
 }

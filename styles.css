@@ -47,7 +47,7 @@ body {
   height: 100%;
   display: flex;
   justify-content: center;
-  column-gap: 20px;
+  column-gap: 0px;
   scroll-behavior: smooth;
   /* Important for swiping */
   overflow: auto;
