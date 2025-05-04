@@ -4,9 +4,9 @@ const cardsContainer = document.getElementById("cards-container");
 const cards = document.querySelectorAll(".card");
 
 // Set parameters
-let translation = 0;
 const wheelSpeed = 0.6;
-const cardsCount = cards.length;
+let translateX = 0;
+let cardsCount = cards.length;
 const cardsCloned = 1;
 const cardWidth = cards[0].offsetWidth;
 const gap = Number(
@@ -39,6 +39,12 @@ cardsContainer.append(leftClone);
 const rightClone = cards[cardsCount - 1].cloneNode(true);
 cardsContainer.prepend(rightClone);
 
+cardsCount = cardsContainer.children.length;
+
+disableTransitions();
+translate();
+enableTranslationAndTransition();
+
 // Perform translation on wheel event
 window.addEventListener(
   "wheel",
@@ -48,13 +54,13 @@ window.addEventListener(
     // Skip if snap translation is in progress
     if (isSnapping) return;
 
-    updateTranslation(e.deltaY);
+    updateTranslateX(e.deltaY);
 
     // Check for snap translation
     const threshold = (cardWidth + gap) * 0.5;
-    if (translation <= threshold * -1) {
+    if (translateX <= threshold * -1) {
       snap("left");
-    } else if (translation >= threshold) {
+    } else if (translateX >= threshold) {
       snap("right");
     } else {
       // Regular translation
@@ -65,17 +71,19 @@ window.addEventListener(
 );
 
 // Function to update translation
-function updateTranslation(deltaY) {
+function updateTranslateX(deltaY) {
   // Normalize wheel delta
   deltaY = Math.round(deltaY * wheelSpeed);
-  translation += deltaY * -1;
+  translateX += deltaY * -1;
 }
 
-// Function to perform regular translation - with preset transition effect
+// Function to perform regular translation with preset transition effect
 function translate() {
-  [...cardsContainer.children].forEach((card) => {
-    card.style.translate = `${translation}px`;
+  [...cardsContainer.children].forEach((card, i) => {
+    const z = getTranslateZ(i);
+    card.style.transform = `translate3D(${translateX}px, 0px, ${z}px)`;
   });
+  setZIndex();
 }
 
 // Function to perform a smooth snap translation - with prolonged transition effect
@@ -85,12 +93,14 @@ function snap(direction) {
 
   // Step 1: Complete full translation (to end position)
   const endPos = direction === "left" ? -cardWidth - gap : cardWidth + gap;
+  translateX = endPos;
 
   // Translate cards to the end position with transition enabled for smooth effect
   [...cardsContainer.children].forEach((card) => {
-    card.style.transition = `translate ${transitionDurationSnap}ms cubic-bezier(0.34, 1.1, 0.64, 1)`;
-    card.style.translate = `${endPos}px`;
+    card.style.transition = `transform ${transitionDurationSnap}ms cubic-bezier(0.34, 1.1, 0.64, 1)`;
   });
+
+  translate();
 
   // Step 2: After full snap animation completes, reorganize DOM
   setTimeout(() => {
@@ -122,16 +132,12 @@ function shiftCards(direction) {
 
   // reset translation to 0 immediately after the DOM is reorganized
   // to create the illusion of continuous movement
-  translation = 0;
-  [...cardsContainer.children].forEach((card) => {
-    card.style.translate = `${translation}px`;
-  });
+  translateX = 0;
 
-  // Re-enable regular translation and preset transition effect -
-  // It happens after small delay of 100ms to ensure DOM changes are complete
-  setTimeout(() => {
-    enableTranslationAndTransition();
-  }, 100);
+  translate();
+
+  // Re-enable regular translation and preset transition effect
+  enableTranslationAndTransition();
 }
 
 // Function to temporarily disable transitions
@@ -146,11 +152,57 @@ function disableTransitions() {
 
 // Function to re-enable transitions
 function enableTranslationAndTransition() {
-  // Release snapping lock
-  isSnapping = false;
-  // Reestablish original transition settings
-  [...cardsContainer.children].forEach((card) => {
-    card.style.transition = transition;
+  // It happens after small delay of 100ms to ensure DOM changes are complete
+  setTimeout(() => {
+    // Release snapping lock
+    isSnapping = false;
+    // Reestablish original transition settings
+    [...cardsContainer.children].forEach((card) => {
+      card.style.transition = transition;
+    });
+    cardsContainer.style.scrollBehavior = "smooth";
+  }, 100);
+}
+
+// ! BUG: cards crossing through each other at the center of the carousel
+// ! Fix: calculate z-index based on the card's position along the carousel's length -
+// ! not on node's index
+// ! as reorganizing the DOM happens after the cards are crossing in the center.
+function getCarouselCenter() {
+  return (cardWidth * cardsCount + gap * (cardsCount - 1)) / 2;
+}
+
+// Function to get the distance from the card's center to the carousel's center
+function getCardCenterToCarouselCenter(i) {
+  const carouselCenter = getCarouselCenter();
+  // Card's center to the carousel's left
+  const cardCenter = i * (cardWidth + gap) + cardWidth / 2;
+  return Math.abs(cardCenter + translateX - carouselCenter);
+}
+
+function getZIndex(i) {
+  const maxZ = Math.ceil(cardsCount / 2);
+  // Normalize card's distance to center
+  const toCenter = getCardCenterToCarouselCenter(i) / (cardWidth + gap);
+  return maxZ - toCenter;
+}
+
+function setZIndex() {
+  // console.log("-----------");
+  [...cardsContainer.children].forEach((card, i) => {
+    card.style.zIndex = `${getZIndex(i)}`;
+    // console.log(card.style.zIndex);
   });
-  cardsContainer.style.scrollBehavior = "smooth";
+  // console.log("-----------");
+}
+
+function getTranslateZ(i) {
+  // Normalize card's position on the x-axis
+  const normalizedX =
+    getCardCenterToCarouselCenter(i) / (getCarouselCenter() - cardWidth * 0.5);
+  // Define max z translation - applied to ending cards
+  const maxTranslationZ = Math.floor((cardsCount - 1) / 2) * -300;
+
+  // Perfect!!!
+  return maxTranslationZ * normalizedX;
 }
