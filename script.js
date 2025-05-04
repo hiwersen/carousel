@@ -166,8 +166,8 @@ function enableTranslationAndTransition() {
 
 // ! BUG: cards crossing through each other at the center of the carousel
 // ! Fix: calculate z-index based on the card's position along the carousel's length -
-// ! not on node's index
-// ! as reorganizing the DOM happens after the cards are crossing in the center.
+// ! instead of DOM indexing
+// ! as reorganizing the DOM happens after the cards have actually crossed in the center.
 function getCarouselCenter() {
   return (cardWidth * cardsCount + gap * (cardsCount - 1)) / 2;
 }
@@ -180,29 +180,30 @@ function getCardCenterToCarouselCenter(i) {
   return Math.abs(cardCenter + translateX - carouselCenter);
 }
 
+// Function to ge the card's normalized distance to the center on the x-axis
+function normalizeX(i) {
+  return (
+    getCardCenterToCarouselCenter(i) / (getCarouselCenter() - cardWidth * 0.5)
+  );
+}
+
+// ! BUG: when the carousel has even cardsCount
+// ! the right side z-index looks reversed
+// ! and the central 2 cards are displaced in the z-axis when they shouldn't be.
 function getZIndex(i) {
-  const maxZ = Math.ceil(cardsCount / 2);
-  // Normalize card's distance to center
-  const toCenter = getCardCenterToCarouselCenter(i) / (cardWidth + gap);
-  return maxZ - toCenter;
+  const maxZIndex = cardsCount;
+  return Math.ceil(maxZIndex - maxZIndex * normalizeX(i));
 }
 
 function setZIndex() {
-  // console.log("-----------");
   [...cardsContainer.children].forEach((card, i) => {
     card.style.zIndex = `${getZIndex(i)}`;
-    // console.log(card.style.zIndex);
+    console.log(getZIndex(i));
   });
-  // console.log("-----------");
 }
 
 function getTranslateZ(i) {
-  // Normalize card's position on the x-axis
-  const normalizedX =
-    getCardCenterToCarouselCenter(i) / (getCarouselCenter() - cardWidth * 0.5);
   // Define max z translation - applied to ending cards
   const maxTranslationZ = Math.floor((cardsCount - 1) / 2) * -300;
-
-  // Perfect!!!
-  return maxTranslationZ * normalizedX;
+  return maxTranslationZ * normalizeX(i);
 }
