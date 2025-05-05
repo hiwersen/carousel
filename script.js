@@ -60,6 +60,8 @@ window.addEventListener(
 
     updateTranslateX(e.deltaY);
 
+    console.log(e.deltaY);
+
     // Check for snap translation
     const threshold = (cardWidth + gap) * 0.5;
     if (translateX <= threshold * -1) {
@@ -106,7 +108,7 @@ function snap(direction) {
 
   translate();
 
-  // Step 2: After full snap animation completes, reorganize DOM
+  // Step 2: After full snap translation completes, reorganize DOM
   setTimeout(() => {
     shiftCards(direction);
   }, transitionDurationSnap);
@@ -187,19 +189,24 @@ function normalizeX(i) {
   );
 }
 
-// ! BUG: there is a jump in the z-index of the right central card
-// ! (immediate shift from back to front of the left central card)
-// ! when the carousel has low cardsCount and is moving from right to left and narrow to no gap
-// ! at moment the moment the DOM is reorganized
+// ! BUG: there is a jump in the z-index
+// ! (immediate shift from back to front of the following card)
+// ! when the carousel has low cardsCount and is moving quicker
+// ! Probably because the z-index has no transition effect
+// ! Check the criteria that changes the z-index
+// Fix: increase z-index range for cases when
+// normalizedX between two cards is subtle:
+// 0.17333333333333334 and 0.16
 function getZIndex(i) {
+  //console.log("normalizedX:", i, normalizeX(i));
   const maxZIndex = cardsCount;
-  return Math.ceil(maxZIndex - maxZIndex * normalizeX(i));
+  return Math.ceil((maxZIndex - maxZIndex * normalizeX(i)) * 10);
 }
 
 function setZIndex() {
   [...cardsContainer.children].forEach((card, i) => {
     card.style.zIndex = `${getZIndex(i)}`;
-    // console.log(getZIndex(i));
+    // console.log("z-index:", i, getZIndex(i));
   });
 }
 
@@ -225,4 +232,5 @@ function getTranslateZQuadratic(i) {
   return maxZ * Math.pow(x, 2);
 }
 
-console.log(window.innerWidth);
+console.log("width:", window.innerWidth);
+console.log("height:", window.innerHeight);

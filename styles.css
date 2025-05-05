@@ -32,7 +32,6 @@ body {
 
 #carousel {
   width: 100dvw;
-  max-width: 1920px;
   height: fit-content;
 
   display: flex;
@@ -44,20 +43,28 @@ body {
 }
 
 #cards-container {
+  /* 
+    ! BUG: when dynamically set - the need to be updated after resizing
+    @screen-width:320px, card: 200px
+    @screen-width:1920px, card: 600px
+  */
+  --card-size: clamp(200px, 25dvw + 120px, 600px);
+
   width: 100%; /* 100dvw - 1920px */
+  max-width: 1920px;
   height: fit-content;
 
   display: flex;
   justify-content: center;
   align-items: end;
-  column-gap: 0px;
+  column-gap: 0vw;
   scroll-behavior: smooth;
   /* Important for swiping */
   overflow: auto;
   /*scroll-snap-type: x mandatory;*/
 
   /* Perspective settings */
-  perspective: 1000px;
+  perspective: calc(var(--card-size) * 2.2);
   perspective-origin: center center;
   transform-style: preserve-3d;
 
@@ -66,13 +73,23 @@ body {
   border: 0px solid black;
 }
 
+@media (max-aspect-ratio: 1/1) {
+  body {
+    background-color: red;
+  }
+
+  #cards-container {
+    /* 
+      @screen-width:320px, card: 200px
+      @screen-width:1024px, card: 600px
+    */
+    --card-size: clamp(200px, 57dvw + 18px, 600px); /* 62 */
+    perspective: calc(var(--card-size) * 0.8);
+  }
+}
+
 .card {
-  /* 
-    ! BUG: when dynamically set - the need to be updated after resizing
-    @screen-width:320px, card: 200px
-    @screen-width:1920px, card: 600px
-  */
-  --card-size: clamp(200px, 25dvw + 120px, 600px);
+  opacity: 1;
   width: var(--card-size);
   height: var(--card-size);
   flex: 0 0 auto;
@@ -86,7 +103,7 @@ body {
 
   /* ! DEBUGGING STYLE 
   background-color: rgba(255, 0, 0, 0.411); */
-  /*border: 2px solid black;*/
+  border: 2px solid black;
 
   /* ! BUG: jagged vertical edges */
 }
