@@ -74,7 +74,7 @@ window.addEventListener(
   { passive: false }
 );
 
-// Function to update translation
+// Function to update x translation
 function updateTranslateX(deltaY) {
   // Normalize wheel delta
   deltaY = Math.round(deltaY * wheelSpeed);
@@ -180,7 +180,7 @@ function getCardCenterFromCarouselCenter(i) {
   return Math.abs(cardCenter + translateX - carouselCenter);
 }
 
-// Function to ge the card's normalized distance (0-1) from the center on the x-axis
+// Function to get the card's normalized distance (0-1) from the center on the x-axis
 function normalizeX(i) {
   return (
     getCardCenterFromCarouselCenter(i) / (getCarouselCenter() - cardWidth * 0.5)
@@ -210,7 +210,7 @@ function getTranslateZCircular(i) {
   // Define radius of the circular arch
   const radius = Math.floor((cardsCount - 1) / 2) * 80;
 
-  // Create a circular arch
+  // Create a circular arch effect
   return radius * (Math.cos(x * Math.PI) - 1);
 }
 
@@ -224,3 +224,5 @@ function getTranslateZQuadratic(i) {
   // Create a quadratic arch effect
   return maxZ * Math.pow(x, 2);
 }
+
+console.log(window.innerWidth);

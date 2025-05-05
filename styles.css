@@ -32,7 +32,8 @@ body {
 
 #carousel {
   width: 100dvw;
-  height: 600px;
+  max-width: 1920px;
+  height: fit-content;
 
   display: flex;
   justify-content: center;
@@ -43,10 +44,12 @@ body {
 }
 
 #cards-container {
-  width: fit-content;
-  height: 100%;
+  width: 100%; /* 100dvw - 1920px */
+  height: fit-content;
+
   display: flex;
   justify-content: center;
+  align-items: end;
   column-gap: 0px;
   scroll-behavior: smooth;
   /* Important for swiping */
@@ -64,10 +67,16 @@ body {
 }
 
 .card {
-  width: 600px;
-  height: 600px;
+  /* 
+    ! BUG: when dynamically set - the need to be updated after resizing
+    @screen-width:320px, card: 200px
+    @screen-width:1920px, card: 600px
+  */
+  --card-size: clamp(200px, 25dvw + 120px, 600px);
+  width: var(--card-size);
+  height: var(--card-size);
   flex: 0 0 auto;
-  font-size: 320px;
+  font-size: calc(var(--card-size) * 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
