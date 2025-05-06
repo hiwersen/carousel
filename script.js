@@ -42,14 +42,13 @@ cardsContainer.prepend(rightClone);
 cardsCount = cardsContainer.children.length;
 
 // Set wheel speed based on cardsCount
-const wheelSpeed = cardsCount * 0.1;
+const wheelSpeed = cardsCount * 0.2;
 
 // Function to update x translation
 function updateTranslateX(deltaX, speed) {
   // Normalize wheel delta
   deltaX = Math.round(deltaX * speed);
   translateX += deltaX * -1;
-  console.log(translateX, deltaX);
 }
 
 // Function to perform regular translation with preset transition effect
@@ -248,7 +247,7 @@ window.addEventListener(
  */
 
 // Track touch positions
-const touchSpeed = 1;
+const touchSpeed = 2;
 const maxSwipe = cardWidth + gap;
 let touchStartX = null;
 let touchEndX = null;
@@ -269,10 +268,6 @@ function handleTouchMove(e) {
   const touchDeltaX = touchMoveX - touchStartX;
   translateX = touchDeltaX;
 
-  console.log("start:", touchStartX);
-  console.log("move:", touchMoveX);
-  console.log("delta:", touchDeltaX);
-
   // Check for snap translation
   if (Math.abs(touchDeltaX) > snapThreshold) {
     if (touchDeltaX < 0) {
@@ -284,18 +279,6 @@ function handleTouchMove(e) {
     // Regular translation
     translate();
   }
-
-  /*
-  console.log(
-    "@move:",
-    "start:",
-    touchStartX,
-    "end:",
-    touchEndX,
-    "translateX:",
-    translateX
-  );
-  */
 }
 
 function handleTouchEnd(e) {
@@ -329,6 +312,30 @@ carousel.addEventListener("touchmove", handleTouchMove, { passive: false });
 carousel.addEventListener("touchend", handleTouchEnd);
 carousel.addEventListener("touchcancel", handleTouchCancel);
 
-// ! FIX: bug when swiping right after snapping
-// ! TODO: limit swipe length
-// ! TODO: ADD arrow key event listeners
+/**
+ * Hand right and left arrow keys events
+ */
+
+let keyDownTime = null;
+
+window.addEventListener("keydown", (e) => {
+  if (!keyDownTime && (e.key == "ArrowLeft" || e.key == "ArrowRight")) {
+    keyDownTime = Date.now();
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  // Cancel action if user has held arrow key down longer than 2s
+  if (Date.now() > keyDownTime + 2000) {
+    keyDownTime = null;
+    return;
+  }
+
+  if (isSnapping) return;
+
+  const direction =
+    e.key == "ArrowLeft" ? "left" : e.key == "ArrowRight" ? "right" : null;
+
+  snap(direction);
+  keyDownTime = null;
+});
