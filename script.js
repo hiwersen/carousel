@@ -4,7 +4,6 @@ const cardsContainer = document.getElementById("cards-container");
 const cards = document.querySelectorAll(".card");
 
 // Set parameters
-const wheelSpeed = 0.6;
 let translateX = 0;
 let cardsCount = cards.length;
 const cardsCloned = 1;
@@ -40,6 +39,9 @@ const rightClone = cards[cardsCount - 1].cloneNode(true);
 cardsContainer.prepend(rightClone);
 
 cardsCount = cardsContainer.children.length;
+
+// Set wheel speed based on cardsCount
+const wheelSpeed = cardsCount * 0.1;
 
 // Function to update x translation
 function updateTranslateX(deltaY) {
@@ -228,4 +230,5 @@ window.addEventListener("resize", () => {
       .getPropertyValue("column-gap")
       .slice(0, -2)
   );
+  init();
 });
