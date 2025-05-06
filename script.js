@@ -26,8 +26,9 @@ const transitionDuration =
       .slice(0, -1)
   ) * 1000;
 
+// Set snap parameters
+const snapThreshold = (cardWidth + gap) * 0.5;
 const transitionDurationSnap = transitionDuration * 2;
-
 // Flag to prevent multiple concurrent translations
 let isSnapping = false;
 
@@ -44,10 +45,11 @@ cardsCount = cardsContainer.children.length;
 const wheelSpeed = cardsCount * 0.1;
 
 // Function to update x translation
-function updateTranslateX(deltaY) {
+function updateTranslateX(deltaX, speed) {
   // Normalize wheel delta
-  deltaY = Math.round(deltaY * wheelSpeed);
-  translateX += deltaY * -1;
+  deltaX = Math.round(deltaX * speed);
+  translateX += deltaX * -1;
+  console.log(translateX, deltaX);
 }
 
 // Function to perform regular translation with preset transition effect
@@ -61,7 +63,7 @@ function translate() {
 
 // Function to perform a smooth snap translation - with prolonged transition effect
 function snap(direction) {
-  // Set snapping flag to prevent wheel events
+  // Set snapping flag to prevent wheel and touch events
   isSnapping = true;
 
   // Step 1: Complete full translation (to end position)
@@ -108,6 +110,7 @@ function shiftCards(direction) {
   translateX = 0;
 
   translate();
+  handleTouchCancel();
 
   // Re-enable regular translation and preset transition effect
   enableTranslationAndTransition();
@@ -197,30 +200,9 @@ function init() {
 
 init();
 
-// Perform translation on wheel event
-window.addEventListener(
-  "wheel",
-  (e) => {
-    e.preventDefault();
-
-    // Skip if snap translation is in progress
-    if (isSnapping) return;
-
-    updateTranslateX(e.deltaY);
-
-    // Check for snap translation
-    const threshold = (cardWidth + gap) * 0.5;
-    if (translateX <= threshold * -1) {
-      snap("left");
-    } else if (translateX >= threshold) {
-      snap("right");
-    } else {
-      // Regular translation
-      translate();
-    }
-  },
-  { passive: false }
-);
+/**
+ * Handle window resize
+ */
 
 window.addEventListener("resize", () => {
   cardWidth = cards[0].offsetWidth;
@@ -232,3 +214,121 @@ window.addEventListener("resize", () => {
   );
   init();
 });
+
+/**
+ * Hand wheel event
+ */
+window.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+
+    // Skip if snap translation is in progress
+    if (isSnapping) return;
+
+    updateTranslateX(e.deltaY, wheelSpeed);
+
+    // Check for snap translation
+    if (Math.abs(translateX) > snapThreshold) {
+      if (translateX < 0) {
+        snap("left");
+      } else {
+        snap("right");
+      }
+    } else {
+      // Regular translation
+      translate();
+    }
+  },
+  { passive: false }
+);
+
+/**
+ * Hand touch events
+ */
+
+// Track touch positions
+const touchSpeed = 1;
+const maxSwipe = cardWidth + gap;
+let touchStartX = null;
+let touchEndX = null;
+
+function handleTouchStart(e) {
+  e.preventDefault();
+  if (isSnapping) return;
+
+  touchStartX = e.touches[0].clientX;
+}
+
+function handleTouchMove(e) {
+  e.preventDefault();
+  if (isSnapping) return;
+
+  const touchMoveX = e.touches[0].clientX;
+  touchStartX = touchStartX ?? touchMoveX;
+  const touchDeltaX = touchMoveX - touchStartX;
+  translateX = touchDeltaX;
+
+  console.log("start:", touchStartX);
+  console.log("move:", touchMoveX);
+  console.log("delta:", touchDeltaX);
+
+  // Check for snap translation
+  if (Math.abs(touchDeltaX) > snapThreshold) {
+    if (touchDeltaX < 0) {
+      snap("left");
+    } else {
+      snap("right");
+    }
+  } else {
+    // Regular translation
+    translate();
+  }
+
+  /*
+  console.log(
+    "@move:",
+    "start:",
+    touchStartX,
+    "end:",
+    touchEndX,
+    "translateX:",
+    translateX
+  );
+  */
+}
+
+function handleTouchEnd(e) {
+  if (isSnapping) return;
+
+  touchEndX = e.changedTouches[0].clientX;
+  const touchDeltaX = touchEndX - touchStartX;
+
+  // Check for snap translation
+  if (Math.abs(touchDeltaX) > snapThreshold) {
+    if (touchDeltaX < 0) {
+      snap("left");
+    } else {
+      snap("right");
+    }
+  } else {
+    // Return to initial position
+    handleTouchCancel();
+  }
+}
+
+function handleTouchCancel() {
+  touchStartX = null;
+  touchEndX = null;
+  translateX = 0;
+  translate();
+}
+
+carousel.addEventListener("touchstart", handleTouchStart, { passive: false });
+carousel.addEventListener("touchmove", handleTouchMove, { passive: false });
+carousel.addEventListener("touchend", handleTouchEnd);
+carousel.addEventListener("touchcancel", handleTouchCancel);
+
+// ! FIX: bug when swiping right after snapping
+// ! TODO: limit swipe length
+// ! TODO: ADD arrow key event listeners
