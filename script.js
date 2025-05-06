@@ -8,8 +8,8 @@ const wheelSpeed = 0.6;
 let translateX = 0;
 let cardsCount = cards.length;
 const cardsCloned = 1;
-const cardWidth = cards[0].offsetWidth;
-const gap = Number(
+let cardWidth = cards[0].offsetWidth;
+let gap = Number(
   window
     .getComputedStyle(cardsContainer)
     .getPropertyValue("column-gap")
@@ -39,42 +39,7 @@ cardsContainer.append(leftClone);
 const rightClone = cards[cardsCount - 1].cloneNode(true);
 cardsContainer.prepend(rightClone);
 
-if (cardsCount % 2 == 0) {
-  // Enforce odd number of cards in the carousel - centered card
-}
-
 cardsCount = cardsContainer.children.length;
-
-disableTransitions();
-translate();
-enableTranslationAndTransition();
-
-// Perform translation on wheel event
-window.addEventListener(
-  "wheel",
-  (e) => {
-    e.preventDefault();
-
-    // Skip if snap translation is in progress
-    if (isSnapping) return;
-
-    updateTranslateX(e.deltaY);
-
-    console.log(e.deltaY);
-
-    // Check for snap translation
-    const threshold = (cardWidth + gap) * 0.5;
-    if (translateX <= threshold * -1) {
-      snap("left");
-    } else if (translateX >= threshold) {
-      snap("right");
-    } else {
-      // Regular translation
-      translate();
-    }
-  },
-  { passive: false }
-);
 
 // Function to update x translation
 function updateTranslateX(deltaY) {
@@ -189,16 +154,7 @@ function normalizeX(i) {
   );
 }
 
-// ! BUG: there is a jump in the z-index
-// ! (immediate shift from back to front of the following card)
-// ! when the carousel has low cardsCount and is moving quicker
-// ! Probably because the z-index has no transition effect
-// ! Check the criteria that changes the z-index
-// Fix: increase z-index range for cases when
-// normalizedX between two cards is subtle:
-// 0.17333333333333334 and 0.16
 function getZIndex(i) {
-  //console.log("normalizedX:", i, normalizeX(i));
   const maxZIndex = cardsCount;
   return Math.ceil((maxZIndex - maxZIndex * normalizeX(i)) * 10);
 }
@@ -206,7 +162,6 @@ function getZIndex(i) {
 function setZIndex() {
   [...cardsContainer.children].forEach((card, i) => {
     card.style.zIndex = `${getZIndex(i)}`;
-    // console.log("z-index:", i, getZIndex(i));
   });
 }
 
@@ -232,5 +187,45 @@ function getTranslateZQuadratic(i) {
   return maxZ * Math.pow(x, 2);
 }
 
-console.log("width:", window.innerWidth);
-console.log("height:", window.innerHeight);
+function init() {
+  disableTransitions();
+  translate();
+  enableTranslationAndTransition();
+}
+
+init();
+
+// Perform translation on wheel event
+window.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+
+    // Skip if snap translation is in progress
+    if (isSnapping) return;
+
+    updateTranslateX(e.deltaY);
+
+    // Check for snap translation
+    const threshold = (cardWidth + gap) * 0.5;
+    if (translateX <= threshold * -1) {
+      snap("left");
+    } else if (translateX >= threshold) {
+      snap("right");
+    } else {
+      // Regular translation
+      translate();
+    }
+  },
+  { passive: false }
+);
+
+window.addEventListener("resize", () => {
+  cardWidth = cards[0].offsetWidth;
+  gap = Number(
+    window
+      .getComputedStyle(cardsContainer)
+      .getPropertyValue("column-gap")
+      .slice(0, -2)
+  );
+});
