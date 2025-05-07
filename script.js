@@ -257,7 +257,7 @@ window.addEventListener(
  */
 
 // Track touch positions
-const touchSpeed = 2;
+const touchSpeed = 1.3;
 const maxSwipe = cardWidth + gap;
 let touchStartX = null;
 let touchEndX = null;
@@ -273,7 +273,7 @@ function handleTouchMove(e) {
   e.preventDefault();
   if (isSnapping) return;
 
-  const touchMoveX = e.touches[0].clientX;
+  const touchMoveX = e.touches[0].clientX * touchSpeed;
   touchStartX = touchStartX ?? touchMoveX;
   const touchDeltaX = touchMoveX - touchStartX;
   translateX = touchDeltaX;
@@ -294,7 +294,7 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
   if (isSnapping) return;
 
-  touchEndX = e.changedTouches[0].clientX;
+  touchEndX = e.changedTouches[0].clientX * touchSpeed;
   const touchDeltaX = touchEndX - touchStartX;
 
   // Check for snap translation
