@@ -273,10 +273,14 @@ function handleTouchMove(e) {
   e.preventDefault();
   if (isSnapping) return;
 
-  const touchMoveX = e.touches[0].clientX * touchSpeed;
+  console.log("touchStartX:", touchStartX);
+
+  const touchMoveX = e.touches[0].clientX;
   touchStartX = touchStartX ?? touchMoveX;
   const touchDeltaX = touchMoveX - touchStartX;
-  translateX = touchDeltaX;
+  translateX = touchDeltaX * touchSpeed;
+
+  console.log("touchDeltaX:", touchDeltaX);
 
   // Check for snap translation
   if (Math.abs(touchDeltaX) > snapThreshold) {
