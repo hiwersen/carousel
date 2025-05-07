@@ -8,10 +8,12 @@
 
 :root {
   --background-color: rgb(27, 27, 27);
-}
 
-html {
-  background-color: blue;
+  /* 
+    @screen-width:320px, card: 200px
+    @screen-width:1920px, card: 600px
+  */
+  --card-size: clamp(200px, 25dvw + 120px, 600px);
 }
 
 body {
@@ -31,60 +33,54 @@ body {
 }
 
 #carousel {
-  width: 100dvw;
-  height: fit-content;
-
   display: flex;
   justify-content: center;
   align-items: center;
-  /* ! DEBUGGING STYLE */
+
+  width: 100dvw;
+  max-width: 1920px;
+
+  /* ! DEBUGGING STYLE 
   background-color: white;
-  border: 0px solid blue;
+  border: 0px solid blue; */
 }
 
 #cards-container {
-  /* 
-    ! BUG: when dynamically set - the need to be updated after resizing
-    @screen-width:320px, card: 200px
-    @screen-width:1920px, card: 600px
-  */
-  --card-size: clamp(200px, 25dvw + 120px, 600px);
-
-  width: 100%; /* 100dvw - 1920px */
-  max-width: 1920px;
-  height: fit-content;
-
   display: flex;
   justify-content: center;
-  align-items: end;
-  column-gap: 0vw;
-  scroll-behavior: smooth;
+  align-items: center;
+  gap: 2px;
+
+  /* Disable for JS users */
+  flex-wrap: wrap;
+
   /* Important for swiping */
+  scroll-behavior: smooth;
   overflow: auto;
-  /*scroll-snap-type: x mandatory;*/
+  scroll-snap-type: x mandatory;
 
   /* Perspective settings */
   perspective: calc(var(--card-size) * 2.2);
   perspective-origin: center center;
   transform-style: preserve-3d;
 
-  /* ! DEBUGGING STYLE */
+  overscroll-behavior: contain;
+  overflow-x: scroll;
+  overflow-y: hidden;
+
+  /* ! DEBUGGING STYLE
   background-color: yellow;
-  border: 0px solid black;
+  border: 0px solid black; */
 }
 
 @media (max-aspect-ratio: 1/1) {
-  body {
-    background-color: red;
-  }
-
   #cards-container {
     /* 
       @screen-width:320px, card: 200px
       @screen-width:1024px, card: 600px
     */
-    --card-size: clamp(200px, 57dvw + 18px, 600px); /* 62 */
-    perspective: calc(var(--card-size) * 0.8);
+    --card-size: clamp(200px, 57dvw + 18px, 600px);
+    perspective: calc(var(--card-size) * 1.6);
   }
 }
 
@@ -99,11 +95,9 @@ body {
   align-items: center;
   transition: transform 600ms ease-out; /* cubic-bezier(0.34, 1.2, 0.64, 1) */
   /* Important for swiping */
-  /*scroll-snap-align: center;*/
+  scroll-snap-align: center;
 
   /* ! DEBUGGING STYLE 
-  background-color: rgba(255, 0, 0, 0.411); */
-  border: 2px solid black;
-
-  /* ! BUG: jagged vertical edges */
+  background-color: rgba(255, 0, 0, 0.411); 
+  border: 2px solid black; */
 }

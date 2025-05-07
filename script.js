@@ -32,6 +32,16 @@ const transitionDurationSnap = transitionDuration * 2;
 // Flag to prevent multiple concurrent translations
 let isSnapping = false;
 
+// Remove CSS snap settings
+cardsContainer.style.scrollSnapType = "none";
+
+cards.forEach((card) => {
+  card.style.scrollSnapAlign = "none";
+});
+
+// Change cards container's flex-wrap from wrap to nowrap
+cardsContainer.style.flexWrap = "nowrap";
+
 // Clone and append ending cards
 const leftClone = cards[0].cloneNode(true);
 cardsContainer.append(leftClone);
@@ -54,7 +64,7 @@ function updateTranslateX(deltaX, speed) {
 // Function to perform regular translation with preset transition effect
 function translate() {
   [...cardsContainer.children].forEach((card, i) => {
-    const z = getTranslateZQuadratic(i);
+    const z = getTranslateZCircular(i);
     card.style.transform = `translate3D(${translateX}px, 0px, ${z}px)`;
   });
   setZIndex();
@@ -313,7 +323,7 @@ carousel.addEventListener("touchend", handleTouchEnd);
 carousel.addEventListener("touchcancel", handleTouchCancel);
 
 /**
- * Hand right and left arrow keys events
+ * Hand right and left arrow key down events
  */
 
 let keyDownTime = null;
